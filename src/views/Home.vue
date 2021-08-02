@@ -50,9 +50,11 @@ export default class Home extends Vue {
     this.myId = uuid();
 
     this.peer = new Peer(this.myId, {
+      secure: Boolean(process.env.VUE_APP_PEER_SERVER_SECURE),
       host: process.env.VUE_APP_PEER_SERVER_HOST,
       port: +process.env.VUE_APP_PEER_SERVER_PORT,
       path: process.env.VUE_APP_PEER_SERVER_PATH,
+      key: process.env.VUE_APP_PEER_SERVER_KEY,
     });
 
     this.peer.on("connection", this.handleConnection);
