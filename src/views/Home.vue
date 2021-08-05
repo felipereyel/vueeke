@@ -12,9 +12,11 @@
         <button @click="sendMessage">Send</button>
       </div>
     </div>
-    <div v-else-if="peer">
+    <div v-else-if="peer" class="id-input">
       <input placeholder="ID of user" v-model="idToConnect" />
       <button @click="connect">Connect</button>
+      <button @click="copyId">Copy ID</button>
+      <button @click="copyLink">Copy Link</button>
     </div>
   </div>
 </template>
@@ -29,6 +31,15 @@ interface Message {
   content: String;
   sender: String;
   sendedAt: String;
+}
+
+function copyToClipboard(str: string) {
+  const el = document.createElement("textarea");
+  el.value = str;
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand("copy");
+  document.body.removeChild(el);
 }
 
 @Options({
@@ -72,6 +83,13 @@ export default class Home extends Vue {
       console.log(err);
       alert("" + err);
     });
+
+    this.peer.on("open", () => {
+      if (this.$route.query.connectTo) {
+        this.idToConnect = this.$route.query.connectTo as string;
+        this.connect();
+      }
+    });
   }
 
   handleConnection(c: DataConnection) {
@@ -107,6 +125,14 @@ export default class Home extends Vue {
       this.messages = [];
       this.contentToSend = "";
     });
+  }
+
+  copyId() {
+    copyToClipboard(this.myId);
+  }
+
+  copyLink() {
+    copyToClipboard(`${location.href}?connectTo=${this.myId}`);
   }
 
   connect() {
@@ -161,5 +187,9 @@ export default class Home extends Vue {
   border-radius: 15px;
   background: #a2ddfa;
   border-color: #86b6cf;
+}
+
+.id-input button {
+  margin-left: 5px;
 }
 </style>
