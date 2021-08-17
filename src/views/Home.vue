@@ -52,14 +52,23 @@ export default class Home extends Vue {
   conn: DataConnection | null = null;
   messages: Message[] = [];
 
-  myId = "";
   contentToSend = "";
   idToConnect = "";
   status = "Awaiting connection...";
 
-  mounted() {
-    this.myId = uuid();
+  get myId(): string {
+    const localId = localStorage.getItem("vueeke.myId");
+    if (localId) return localId;
 
+    this.myId = uuid();
+    return this.myId;
+  }
+
+  set myId(myId: string) {
+    localStorage.setItem("vueeke.myId", myId);
+  }
+
+  mounted() {
     this.peer = new Peer(this.myId, {
       secure: Boolean(process.env.VUE_APP_PEER_SERVER_SECURE),
       host: process.env.VUE_APP_PEER_SERVER_HOST,
@@ -86,8 +95,10 @@ export default class Home extends Vue {
 
     this.peer.on("open", () => {
       if (this.$route.query.connectTo) {
-        this.idToConnect = this.$route.query.connectTo as string;
-        this.connect();
+        setTimeout(() => {
+          this.idToConnect = this.$route.query.connectTo as string;
+          this.connect();
+        }, 1000);
       }
     });
   }
