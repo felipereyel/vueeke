@@ -2,7 +2,7 @@
   <div class="home">
     <div class="connection-header">
       <h2>{{ status }}</h2>
-      <h3 v-if="myId">My ID: {{ myId }}</h3>
+      <h3 v-if="user">{{ user.username }}: {{ user.connectionId }}</h3>
     </div>
 
     <div v-if="conn" class="chat-container">
@@ -23,9 +23,9 @@
 
 <script lang="ts">
 import { Options, Vue } from "vue-class-component";
-import { uuid } from "uuidv4";
 import Peer, { DataConnection } from "peerjs";
 import MessageList from "../components/MessageList.vue";
+import User from "../models/user";
 
 interface Message {
   content: String;
@@ -56,23 +56,18 @@ export default class Home extends Vue {
   idToConnect = "";
   status = "Awaiting connection...";
 
-  get myId(): string {
-    const localId = localStorage.getItem("vueeke.myId");
-    if (localId) return localId;
-
-    this.myId = uuid();
-    return this.myId;
-  }
-
-  set myId(myId: string) {
-    localStorage.setItem("vueeke.myId", myId);
-  }
+  user: User | null = null;
 
   mounted() {
-    this.peer = new Peer(this.myId, {
+    if (!User.current) {
+      this.$router.push({ name: "Login" });
+    }
+    this.user = User.current;
+  
+    this.peer = new Peer(this.user?.connectionId, {
       secure: Boolean(process.env.VUE_APP_PEER_SERVER_SECURE),
+      port: Number(process.env.VUE_APP_PEER_SERVER_PORT),
       host: process.env.VUE_APP_PEER_SERVER_HOST,
-      port: +process.env.VUE_APP_PEER_SERVER_PORT,
       path: process.env.VUE_APP_PEER_SERVER_PATH,
       key: process.env.VUE_APP_PEER_SERVER_KEY,
     });
@@ -139,11 +134,11 @@ export default class Home extends Vue {
   }
 
   copyId() {
-    copyToClipboard(this.myId);
+    copyToClipboard(`${this.user?.connectionId}`);
   }
 
   copyLink() {
-    copyToClipboard(`${location.href}?connectTo=${this.myId}`);
+    copyToClipboard(`${location.href}?connectTo=${this.user?.connectionId}`);
   }
 
   connect() {
