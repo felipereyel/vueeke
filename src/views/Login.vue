@@ -19,6 +19,12 @@ export default class Login extends Vue {
   username = "";
   password = "";
 
+  mounted() {
+    if (User.current) {
+      this.$router.push({ name: "Home" });
+    }
+  }
+
   async login() {
     try {
       await User.login(this.username, this.password);
