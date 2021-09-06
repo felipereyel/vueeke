@@ -97,4 +97,24 @@ export default class Contacts extends Vue {
   justify-content: space-between;
   margin-bottom: 20px;
 }
+
+.contact-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.contact {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 300px;
+
+  margin-top: 10px;
+
+  background-color: rgb(165, 204, 172);
+  padding: 10px;
+  border-radius: 10px;
+}
 </style>
