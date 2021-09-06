@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-type UserAuth = {
+export type UserAuth = {
   username: string;
   connectionId: string;
 };
@@ -16,7 +16,7 @@ async function fetcher(
 ): Promise<Record<string, any>> {
   const response = await fetch(`${basePath}/${path}`, {
     method,
-    body: JSON.stringify(body),
+    body: method !== "GET" ? JSON.stringify(body) : undefined,
     headers: {
       ...headers,
       "Content-Type": "application/json"
@@ -46,6 +46,10 @@ export default class User {
     return User.fromToken(token);
   }
 
+  static logout() {
+    localStorage.removeItem(localStorageKey);
+  }
+
   static get current(): User | null {
     try {
       const token = localStorage.getItem(localStorageKey);
@@ -54,6 +58,13 @@ export default class User {
     } catch (e) {
       return null;
     }
+  }
+
+  static async listUsers(): Promise<UserAuth[]> {
+    const token = localStorage.getItem(localStorageKey);
+    if (!token) return [];
+    const { users } = await fetcher("users", "GET", {}, { "Authorization": token });
+    return users;
   }
 
   username: string;

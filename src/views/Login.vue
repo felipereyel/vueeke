@@ -21,14 +21,14 @@ export default class Login extends Vue {
 
   mounted() {
     if (User.current) {
-      this.$router.push({ name: "Home" });
+      this.$router.push({ name: "Contacts" });
     }
   }
 
   async login() {
     try {
       await User.login(this.username, this.password);
-      this.$router.push({ name: "Home" });
+      this.$router.push({ name: "Contacts" });
     } catch (e) {
       alert(e.message);
     }
@@ -37,7 +37,7 @@ export default class Login extends Vue {
   async register() {
     try {
       await User.register(this.username, this.password);
-      this.$router.push({ name: "Home" });
+      this.$router.push({ name: "Contacts" });
     } catch (e) {
       alert(e.message);
     }
