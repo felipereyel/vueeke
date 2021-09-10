@@ -132,6 +132,6 @@ export default class Contacts extends Vue {
 }
 
 .pubkey {
-  font-size: 0.5rem
+  font-size: 0.55rem
 }
 </style>
