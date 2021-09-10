@@ -26,7 +26,7 @@ export class MyPeer {
   init(onConnect: ConnectionHandler) {
     if (!User.current) throw new Error("user not found");
 
-    this.peer = new Peer(User.current.connectionId, {
+    this.peer = new Peer(User.current.connection, {
       secure: Boolean(process.env.VUE_APP_PEER_SERVER_SECURE),
       port: Number(process.env.VUE_APP_PEER_SERVER_PORT),
       host: process.env.VUE_APP_PEER_SERVER_HOST,

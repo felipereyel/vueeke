@@ -2,7 +2,7 @@
   <div class="contacts">
     <div class="header">
       <button @click="contacts">Contacts</button>
-      <h3 v-if="user">{{ user.username }}: {{ user.connectionId }}</h3>
+      <h3 v-if="user">{{ user.username }}: {{ user.connection }}</h3>
       <button @click="logout">Logout</button>
     </div>
 
@@ -13,9 +13,9 @@
     </div>
 
     <div class="contact-list">
-      <div class="contact" v-for="u in activeUsers" :key="u.connectionId">
+      <div class="contact" v-for="u in activeUsers" :key="u.connection">
         <span>{{ u.username }}</span>
-        <button @click="connectTo(u.connectionId)">Connect</button>
+        <button @click="connectTo(u.connection)">Connect</button>
       </div>
     </div>
   </div>
@@ -52,11 +52,11 @@ export default class Contacts extends Vue {
   }
 
   get activeUsers(): UserAuth[] {
-    return this.users.filter((u) => u.connectionId !== this.user?.connectionId);
+    return this.users.filter((u) => u.connection !== this.user?.connection);
   }
 
   copyId() {
-    copy(`${this.user?.connectionId}`);
+    copy(`${this.user?.connection}`);
   }
 
   connectTo(id: string) {

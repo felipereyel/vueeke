@@ -8,11 +8,11 @@ export type Pub = {
 
 export type UserAuth = {
   username: string;
-  connectionId: string;
+  connection: string;
   pubkey: Pub;
 };
 
-const basePath = `http://${process.env.VUE_APP_PEER_SERVER_HOST}:${process.env.VUE_APP_PEER_SERVER_PORT}`;
+const basePath = `https://${process.env.VUE_APP_PEER_SERVER_HOST}:${process.env.VUE_APP_PEER_SERVER_PORT}`;
 const localStorageKey = 'peereke-user-token';
 const ec = new EC('secp256k1');
 
@@ -87,12 +87,12 @@ export default class User {
   }
 
   username: string;
-  connectionId: string;
+  connection: string;
   pubkey: Pub;
 
   constructor(userAuth: UserAuth) {
     this.username = userAuth.username;
-    this.connectionId = userAuth.connectionId;
+    this.connection = userAuth.connection;
     this.pubkey = userAuth.pubkey;
   }
 }
