@@ -1,12 +1,20 @@
 import jwt from 'jsonwebtoken';
+import { ec as EC } from 'elliptic';
+
+export type Pub = {
+  x: string;
+  y: string;
+};
 
 export type UserAuth = {
   username: string;
   connectionId: string;
+  pubkey: Pub;
 };
 
-const basePath = `https://${process.env.VUE_APP_PEER_SERVER_HOST}`;
+const basePath = `http://${process.env.VUE_APP_PEER_SERVER_HOST}:${process.env.VUE_APP_PEER_SERVER_PORT}`;
 const localStorageKey = 'peereke-user-token';
+const ec = new EC('secp256k1');
 
 async function fetcher(
   path: string,
@@ -34,14 +42,35 @@ export default class User {
     return new User(decoded);
   }
 
-  static async register(username: string, password: string): Promise<User> {
-    const { token } = await fetcher("users", "PUT", { username, password });
-    localStorage.setItem(localStorageKey, token);
-    return User.fromToken(token);
+  static async register(username: string): Promise<string> {
+    const key = ec.genKeyPair();
+    const pubPoint = key.getPublic();
+    const x = pubPoint.getX().toString('hex');
+    const y = pubPoint.getY().toString('hex');
+    const pubkey = { x, y }; 
+
+    await fetcher("users", "PUT", { username, pubkey });
+
+    (window as any)["rkey"] = key;
+
+    const privKey = key.getPrivate();
+    return privKey.toArray().toString();
   }
 
-  static async login(username: string, password: string): Promise<User> {
-    const { token } = await fetcher("users/login", "POST", { username, password });
+  static async login(username: string, privStr: string): Promise<User> {
+    const key = ec.keyFromPrivate(privStr);
+
+    (window as any)["lkey"] = key;
+
+    console.log(key.inspect());
+    console.log(key.getPublic());
+
+    const message = Array.from({length: 10}, () => Math.floor(Math.random() * 100));
+    const signature = key.sign(message).toDER();
+
+    console.log({ username, message, signature });
+
+    const { token } = await fetcher("users/login", "POST", { username, message, signature });
     localStorage.setItem(localStorageKey, token);
     return User.fromToken(token);
   }

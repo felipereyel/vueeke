@@ -3,7 +3,7 @@
     <h2>Login</h2>
     <div class="login-input">
       <input placeholder="Username" v-model="username" />
-      <input placeholder="Password" type="password" v-model="password" />
+      <input placeholder="Private Key" type="password" v-model="privKey" />
       <button @click="login">Login</button>
       <button @click="register">Register</button>
     </div>
@@ -17,7 +17,7 @@ import User from "../models/user";
 @Options({})
 export default class Login extends Vue {
   username = "";
-  password = "";
+  privKey = "";
 
   mounted() {
     if (User.current) {
@@ -27,7 +27,7 @@ export default class Login extends Vue {
 
   async login() {
     try {
-      await User.login(this.username, this.password);
+      await User.login(this.username, this.privKey);
       this.$router.push({ name: "Contacts" });
     } catch (e) {
       alert(e.message);
@@ -35,12 +35,7 @@ export default class Login extends Vue {
   }
 
   async register() {
-    try {
-      await User.register(this.username, this.password);
-      this.$router.push({ name: "Contacts" });
-    } catch (e) {
-      alert(e.message);
-    }
+    this.$router.push({ name: "Register" });
   }
 }
 </script>
