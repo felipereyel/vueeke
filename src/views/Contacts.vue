@@ -14,7 +14,10 @@
 
     <div class="contact-list">
       <div class="contact" v-for="u in activeUsers" :key="u.connection">
-        <span>{{ u.username }}</span>
+        <div class="info">
+          <span>User: {{ u.username }}</span>
+          <span class="pubkey"><pre>Public Key: {{ hashKey(u.pubkey) }}</pre></span>
+        </div>
         <button @click="connectTo(u.connection)">Connect</button>
       </div>
     </div>
@@ -24,7 +27,7 @@
 <script lang="ts">
 import { Options, Vue } from "vue-class-component";
 
-import User, { UserAuth } from "../models/user";
+import User, { UserAuth, Pub } from "../models/user";
 import peer from "../models/peer";
 import copy from "../utils/copy";
 
@@ -57,6 +60,10 @@ export default class Contacts extends Vue {
 
   copyId() {
     copy(`${this.user?.connection}`);
+  }
+
+  hashKey(key: Pub) {
+    return btoa(JSON.stringify(key.x));
   }
 
   connectTo(id: string) {
@@ -109,12 +116,22 @@ export default class Contacts extends Vue {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  width: 300px;
 
   margin-top: 10px;
 
   background-color: rgb(165, 204, 172);
   padding: 10px;
   border-radius: 10px;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  margin-right: 1rem;
+}
+
+.pubkey {
+  font-size: 0.7rem
 }
 </style>
