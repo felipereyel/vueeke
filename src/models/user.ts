@@ -54,21 +54,13 @@ export default class User {
     (window as any)["rkey"] = key;
 
     const privKey = key.getPrivate();
-    return privKey.toArray().toString();
+    return privKey.toString("hex");
   }
 
   static async login(username: string, privStr: string): Promise<User> {
     const key = ec.keyFromPrivate(privStr);
-
-    (window as any)["lkey"] = key;
-
-    console.log(key.inspect());
-    console.log(key.getPublic());
-
     const message = Array.from({length: 10}, () => Math.floor(Math.random() * 100));
     const signature = key.sign(message).toDER();
-
-    console.log({ username, message, signature });
 
     const { token } = await fetcher("users/login", "POST", { username, message, signature });
     localStorage.setItem(localStorageKey, token);
