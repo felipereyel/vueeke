@@ -51,8 +51,6 @@ export default class User {
 
     await fetcher("users", "PUT", { username, pubkey });
 
-    (window as any)["rkey"] = key;
-
     const privKey = key.getPrivate();
     return privKey.toString("hex");
   }
@@ -90,9 +88,11 @@ export default class User {
 
   username: string;
   connectionId: string;
+  pubkey: Pub;
 
   constructor(userAuth: UserAuth) {
     this.username = userAuth.username;
     this.connectionId = userAuth.connectionId;
+    this.pubkey = userAuth.pubkey;
   }
 }

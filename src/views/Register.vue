@@ -4,6 +4,7 @@
     <div class="register-input" v-if="!privKey">
       <input placeholder="Username" v-model="username" />
       <button @click="register">Register</button>
+      <button @click="login">Login</button>
     </div>
     <div class="register-result" v-else>
       <label>Username</label>
@@ -43,7 +44,7 @@ export default class Login extends Vue {
     }
   }
 
-  async login() {
+  login() {
     this.$router.push({ name: "Login" });
   }
 }
