@@ -16,7 +16,9 @@
       <div class="contact" v-for="u in activeUsers" :key="u.connection">
         <div class="info">
           <span>User: {{ u.username }}</span>
-          <span class="pubkey"><pre>Public Key: {{ hashKey(u.pubkey) }}</pre></span>
+          <span class="pubkey"
+            ><pre>Public Key: {{ hashKey(u.pubkey) }}</pre></span
+          >
         </div>
         <button @click="connectTo(u.connection)">Connect</button>
       </div>
@@ -28,7 +30,7 @@
 import { Options, Vue } from "vue-class-component";
 
 import User, { UserAuth } from "../models/user";
-import { Pub } from "../utils/cripto";
+import { hashKey } from "../utils/crypto";
 import peer from "../models/peer";
 import copy from "../utils/copy";
 
@@ -36,6 +38,8 @@ import copy from "../utils/copy";
   components: {},
 })
 export default class Contacts extends Vue {
+  hashKey = hashKey;
+
   idToConnect = "";
   user: User | null = null;
 
@@ -61,10 +65,6 @@ export default class Contacts extends Vue {
 
   copyId() {
     copy(`${this.user?.connection}`);
-  }
-
-  hashKey(key: Pub) {
-    return btoa(JSON.stringify(key.x));
   }
 
   connectTo(id: string) {
@@ -133,6 +133,6 @@ export default class Contacts extends Vue {
 }
 
 .pubkey {
-  font-size: 0.55rem
+  font-size: 0.55rem;
 }
 </style>

@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken';
-import { ec as EC } from 'elliptic';
 
 import { createKey, genSignature, Pub } from "../utils/crypto";
 
@@ -11,7 +10,6 @@ export type UserAuth = {
 
 const basePath = `https://${process.env.VUE_APP_PEER_SERVER_HOST}:${process.env.VUE_APP_PEER_SERVER_PORT}`;
 const localStorageKey = 'peereke-user-token';
-const ec = new EC('secp256k1');
 
 async function fetcher(
   path: string,

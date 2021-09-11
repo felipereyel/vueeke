@@ -1,4 +1,6 @@
-import { ec as EC } from 'elliptic';
+import { ec as EC, curve } from 'elliptic';
+import BN from "bn.js";
+import CryptoJS from "crypto-js";
 
 export type Pub = {
     x: string;
@@ -7,7 +9,7 @@ export type Pub = {
 
 const ec = new EC('secp256k1');
 
-function pubP(p): Pub {
+function pubP(p: curve.base.BasePoint): Pub {
     const x = p.getX().toString('hex');
     const y = p.getY().toString('hex');
     return { x, y };
@@ -27,6 +29,10 @@ function priv(key: EC.KeyPair): string {
     return privP(p);
 }
 
+export function hashKey(key: Pub) {
+    return Buffer.from(JSON.stringify(key.x)).toString('base64');
+}
+
 export function createKey(): { privkey: string, pubkey: Pub } {
     const key = ec.genKeyPair();
     return { 
@@ -42,8 +48,6 @@ export function genSignature(privkey: string): { message: number[], signature: n
     return { message, signature };
 }
 
-export class Cipher {}
-
 export class EKE {
     privkey: EC.KeyPair;
     pubkey: EC.KeyPair;
@@ -57,22 +61,28 @@ export class EKE {
 
     start(): Pub {
         this.sessionKey = ec.genKeyPair();
-        const toB = this.pubkey.getPublic().mul(this.sessionKey.getPrivate().add(this.privkey.getPrivate()));
-        const SX = privP(this.privkey.getPrivate().add(this.sessionKey.getPrivate()));
-        const toOther = ec.keyFromPrivate(SX);
-
-        return pub(toOther);
+        const toOther = this.pubkey.getPublic().mul(this.sessionKey.getPrivate().add(this.privkey.getPrivate()));        
+        return pubP(toOther);
     }
 
-    end(received: Pub) {
-        const receivedKey = ec.keyFromPublic(received, 'hex');
-        const invPrivKey = this.privkey.getPrivate().invm(ec.n);
+    end(received: Pub): Pub {
+        if (!this.sessionKey || !ec.n) throw new Error("session did not start");
+        const toMe = ec.keyFromPublic(received, 'hex').getPublic();
+        
+        const myPartialShared = toMe
+            .mul(this.privkey.getPrivate().invm(ec.n))
+            .add(this.pubkey.getPublic().neg());
 
-        // privKeyInv = pow(self.privKey, -1, self.curve.field.n)
-        // myPartialShared =  (received * privKeyInv) - self.otherPub
-        // shared = self.mySelfPartialShared + myPartialShared
-
-        // self.cipher = AESCipher(shared.x)
-        // return shared.x
+        const shared = myPartialShared.add(this.sessionKey.getPublic());
+        return pubP(shared);
     }
+}
+
+export function encrypt(plainText: string, key: Pub): string {
+    return CryptoJS.AES.encrypt(plainText, hashKey(key)).toString();
+}
+
+export function decrypt(cipherText: string, key: Pub): string {
+    const bytes = CryptoJS.AES.decrypt(cipherText, hashKey(key));
+    return bytes.toString(CryptoJS.enc.Utf8);
 }
