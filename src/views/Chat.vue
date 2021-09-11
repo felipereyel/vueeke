@@ -21,7 +21,7 @@ import { Options, Vue } from "vue-class-component";
 
 import MessageList from "../components/MessageList.vue";
 
-import User from "../models/user";
+import User, { UserAuth } from "../models/user";
 import peer, { MyPeer } from "../models/peer";
 
 interface Message {
@@ -38,41 +38,36 @@ interface Message {
 export default class Chat extends Vue {
   messages: Message[] = [];
   contentToSend = "";
+
   peer: MyPeer | null = null;
-  user: User | null = null;
+  userTo: UserAuth | null = null;
 
   async mounted() {
-    if (!User.current) {
-      this.$router.push({ name: "Login" });
-      return;
-    }
-    if (!this.$route.params.id || !peer.peer) {
-      this.$router.push({ name: "Contacts" });
-      return;
-    }
+    if (!User.current) return this.toLogout();
+    if (!this.$route.params.id || !peer.peer) return this.toContacts();
 
     const connection = this.$route.params.id as string;
     const userTo = await User.findByConnection(connection);
-    if (!userTo) {
-      this.$router.push({ name: "Contacts" });
-      return;
+    if (!userTo) return this.toContacts();
+
+    this.peer = peer; // bind para usar no v-if e status
+    this.userTo = userTo;
+
+    if (peer.conn && peer.conn.peer === connection) {
+      peer.printMessage = this.addMessage;
+      console.log("already connected");
+    } else {
+      try {
+        peer.connectTo(
+          this.userTo.connection,
+          this.userTo.pubkey,
+          this.addMessage
+        );
+      } catch (e) {
+        alert(`Error: ${e.message}`);
+        this.toContacts();
+      }
     }
-
-    this.user = User.current;
-    this.peer = peer;
-
-    try {
-      peer.connectTo(userTo.connection, userTo.pubkey, this.addMessage, () => {
-        alert("disconnected");
-        this.$router.push({ name: "Contacts" });
-      });
-    } catch (e) {
-      this.$router.push({ name: "Contacts" });
-    }
-  }
-
-  beforeUnmount() {
-    peer.close();
   }
 
   addMessage(content: string, sender = "me") {
@@ -85,23 +80,28 @@ export default class Chat extends Vue {
 
   sendMessage() {
     if (!this.contentToSend) return;
-    if (peer.conn && peer.conn.open) {
+    try {
       peer.sendMessage(this.contentToSend);
       this.addMessage(this.contentToSend);
       this.contentToSend = "";
-    } else {
-      alert("Connection is closed");
+    } catch (e) {
+      alert(`Error: ${e.message}`);
     }
   }
 
-  logout() {
-    User.logout();
-    this.$router.push({ name: "Login" });
+  beforeUnmount() {
+    peer.close();
   }
 
-  contacts() {
+  toLogout() {
+    User.logout();
+    this.$router.push({ name: "Login" });
+    peer.close();
+  }
+
+  toContacts() {
     this.$router.push({ name: "Contacts" });
-    this.peer?.close();
+    peer.conn?.close();
   }
 }
 </script>

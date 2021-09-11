@@ -34,3 +34,5 @@ const router = createRouter({
 });
 
 export default router;
+
+export const goHome = () => router.push({ name: "Contacts" });
