@@ -130,7 +130,7 @@ export class MyPeer {
   }
 
   endKE(KE: Pub) {
-    if (!this.eke) throw new Error("cant end when eke is not initialized");
+    if (!this.eke) throw new Error("cant end KE when eke is not initialized");
     this.sessionSecret = this.eke.end(KE);
   }
 
