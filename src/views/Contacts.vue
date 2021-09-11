@@ -27,7 +27,8 @@
 <script lang="ts">
 import { Options, Vue } from "vue-class-component";
 
-import User, { UserAuth, Pub } from "../models/user";
+import User, { UserAuth } from "../models/user";
+import { Pub } from "../utils/cripto";
 import peer from "../models/peer";
 import copy from "../utils/copy";
 

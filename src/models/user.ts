@@ -1,10 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { ec as EC } from 'elliptic';
 
-export type Pub = {
-  x: string;
-  y: string;
-};
+import { createKey, genSignature, Pub } from "../utils/crypto";
 
 export type UserAuth = {
   username: string;
@@ -43,23 +40,13 @@ export default class User {
   }
 
   static async register(username: string): Promise<string> {
-    const key = ec.genKeyPair();
-    const pubPoint = key.getPublic();
-    const x = pubPoint.getX().toString('hex');
-    const y = pubPoint.getY().toString('hex');
-    const pubkey = { x, y }; 
-
+    const { privkey, pubkey } = createKey();
     await fetcher("users", "PUT", { username, pubkey });
-
-    const privKey = key.getPrivate();
-    return privKey.toString("hex");
+    return privkey;
   }
 
   static async login(username: string, privStr: string): Promise<User> {
-    const key = ec.keyFromPrivate(privStr);
-    const message = Array.from({length: 10}, () => Math.floor(Math.random() * 100));
-    const signature = key.sign(message).toDER();
-
+    const { message, signature } = genSignature(privStr);
     const { token } = await fetcher("users/login", "POST", { username, message, signature });
     localStorage.setItem(localStorageKey, token);
     return User.fromToken(token);
