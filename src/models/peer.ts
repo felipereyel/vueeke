@@ -2,7 +2,7 @@ import Peer, { DataConnection } from "peerjs";
 
 import { goHome } from "@/router";
 import User from "./user";
-import { EKE, encrypt, decrypt, Pub } from "../utils/crypto";
+import { EKE, encrypt, decrypt, Pub, hashKey } from "../utils/crypto";
 
 type ConnectionHandler = (c: DataConnection) => void;
 type PrintMessage = (content: string, sender: string) => void;
@@ -97,9 +97,9 @@ export class MyPeer {
         if (data.type === "message") {
           this.receiveMessage(data.cipherText);
         } else if (data.type === "start_KE") {
-          this.startAndEndKE(data.toOther, c.peer);
+          this.startAndEndKE(data.hanshake, c.peer);
         } else if (data.type === "end_KE") {
-          this.endKE(data.toOther);
+          this.endKE(data.hanshake);
         } else {
           console.error("Unknown data type:", data);
         }
@@ -117,21 +117,17 @@ export class MyPeer {
   }
 
   startKE(otherPubkey: Pub) {
-    console.log("in: startKE", otherPubkey);
-    //
     if (!this.conn || !this.conn.open) throw new Error("cant startKE when connection is closed");
     if (!this.privkey) throw new Error("cant startKE without privkey");    
     
     this.eke = new EKE(this.privkey, otherPubkey);
-    const toOther = this.eke.start();
-    this.conn.send({ type: "start_KE", toOther });
+    const hanshake = this.eke.start();
+    this.conn.send({ type: "start_KE", hanshake });
     //
-    console.log("out: startKE", toOther);
+    console.log(`my handshake: ${hashKey(hanshake)}`);
   }
 
-  async startAndEndKE(KE: Pub, connection: string) {
-    console.log("in: startAndEndKE", KE);
-    //
+  async startAndEndKE(hanshake: Pub, connection: string) {
     if (!this.conn || !this.conn.open) throw new Error("cant startAndEndKE when connection is closed");
     if (!this.privkey) throw new Error("cant startAndEndKE without privkey");
 
@@ -139,21 +135,21 @@ export class MyPeer {
     if (!userTo) throw new Error("cant startAndEndKE when userTo is unknown");
     
     this.eke = new EKE(this.privkey, userTo.pubkey);
-    const toOther = this.eke.start();
-    this.conn.send({ type: "end_KE", toOther });
+    const myHanshake = this.eke.start();
+    this.conn.send({ type: "end_KE", hanshake: myHanshake });
     //
-    console.log("out: startAndEndKE", toOther)
+    console.log(`my handshake: ${hashKey(myHanshake)}`);
     //
-    this.endKE(KE);
+    this.endKE(hanshake);
   }
 
-  endKE(KE: Pub) {
-    console.log("in: endKE", KE)
+  endKE(hanshake: Pub) {
+    console.log(`other handshake: ${hashKey(hanshake)}`)
     //
     if (!this.eke) throw new Error("cant endKE when eke is not initialized");
-    this.sessionSecret = this.eke.end(KE);
+    this.sessionSecret = this.eke.end(hanshake);
     //
-    console.log("out: endKE", this.sessionSecret);
+    console.log(`session secret: ${hashKey(this.sessionSecret)}`);
   }
 
   receiveMessage(cipherText: string) {
