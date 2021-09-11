@@ -1,5 +1,7 @@
 import Peer, { DataConnection } from "peerjs";
+
 import User from "./user";
+import { EKE, encrypt, decrypt, Pub } from "../utils/crypto";
 
 type ConnectionHandler = (c: DataConnection) => void;
 type AddMessageHandler = (content: string, sender: string) => void;
@@ -17,11 +19,17 @@ export class MyPeer {
 
   peer: Peer | null = null;
   status: string = "Awaiting connection...";
-
   conn: DataConnection | null = null;
+
+  privkey: string;
+  eke: EKE | null = null;
+  sessionSecret: Pub | null = null;
+
   addMessage: AddMessageHandler | null = null;
 
-  private constructor() { }
+  private constructor(privkey: string) {
+    this.privkey = privkey;
+  }
 
   init(onConnect: ConnectionHandler) {
     if (!User.current) throw new Error("user not found");
@@ -53,13 +61,19 @@ export class MyPeer {
     });
   }
 
-  connectTo(id: string, addMessage: AddMessageHandler, onClose: CloserHandler) {
+  connectTo(id: string, pubkey: Pub, addMessage: AddMessageHandler, onClose: CloserHandler) {
     if (!this.peer) throw new Error("no peer found");
-
+    this.eke = new EKE(this.privkey, pubkey);
     this.addMessage = addMessage;
+
     if (this.conn) this.conn.close();
     const c = this.peer.connect(id, {
       reliable: true,
+    });
+
+    c.on("open", () => {
+      // setTimeout
+      this.startKE();
     });
 
     this.handleConnection(c, onClose);
@@ -82,8 +96,11 @@ export class MyPeer {
     c.on("data", (data) => {
       if (typeof data === "object") {
         if (data.type === "message") {
-          if (!this.addMessage) throw new Error("No message handler");
-          this.addMessage(data.content, c.peer);
+          this.receiveMessage(data.cipherText);
+        } else if (data.type === "start_KE") {
+          this.startKE(data.toOther);
+        } else if (data.type === "end_KE") {
+          this.endKE(data.toOther);
         } else {
           console.error("Unknown data type:", data);
         }
@@ -99,9 +116,37 @@ export class MyPeer {
     });
   }
 
-  sendMessage(content: string) {
+  startKE(KE: Pub | null = null) {
     if (!this.conn || !this.conn.open) throw new Error("Connection is closed");
-    this.conn.send({ type: "message", content });
+    if (!this.eke) throw new Error("eke not initialized");
+    const toOther = this.eke.start();
+
+    if (KE) {
+      this.conn.send({ type: "end_KE", toOther });
+    } else {
+      this.conn.send({ type: "start_KE", toOther });
+    }
+  }
+
+  endKE(KE: Pub) {
+    if (!this.eke) throw new Error("eke not initialized");
+    this.sessionSecret = this.eke.end(KE);
+  }
+
+  receiveMessage(cipherText: string, ) {
+    if (!this.addMessage) throw new Error("No message handler");
+    if (!this.sessionSecret) throw new Error("secret not stablished");
+
+    const plainText = decrypt(cipherText, this.sessionSecret);
+    this.addMessage(plainText, "other");
+  }
+
+  sendMessage(plainText: string) {
+    if (!this.conn || !this.conn.open) throw new Error("Connection is closed");
+    if (!this.sessionSecret) throw new Error("secret not stablished");
+    
+    const cipherText = encrypt(plainText, this.sessionSecret);
+    this.conn.send({ type: "message", cipherText });
   }
 
   close() {

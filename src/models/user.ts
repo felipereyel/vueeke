@@ -66,9 +66,16 @@ export default class User {
 
   static async listUsers(): Promise<UserAuth[]> {
     const token = localStorage.getItem(localStorageKey);
-    if (!token) return [];
+    if (!token) return []; // fix me
     const { users } = await fetcher("users", "GET", {}, { "Authorization": token });
     return users;
+  }
+
+  static async findByConnection(connection: string): Promise<UserAuth | null> {
+    const token = localStorage.getItem(localStorageKey);
+    if (!token) return null; // fix me
+    const { user } = await fetcher(`users/${connection}`, "GET", {}, { "Authorization": token });
+    return user;
   }
 
   username: string;

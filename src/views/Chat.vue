@@ -41,22 +41,31 @@ export default class Chat extends Vue {
   peer: MyPeer | null = null;
   user: User | null = null;
 
-  mounted() {
-    if (!User.current) this.$router.push({ name: "Login" });
-    if (!this.$route.params.id || !peer.peer) this.$router.push({ name: "Contacts" });
+  async mounted() {
+    if (!User.current) {
+      this.$router.push({ name: "Login" });
+      return;
+    }
+    if (!this.$route.params.id || !peer.peer) {
+      this.$router.push({ name: "Contacts" });
+      return;
+    }
+
+    const connection = this.$route.params.id as string;
+    const userTo = await User.findByConnection(connection);
+    if (!userTo) {
+      this.$router.push({ name: "Contacts" });
+      return;
+    }
 
     this.user = User.current;
     this.peer = peer;
 
     try {
-      peer.connectTo(
-        this.$route.params.id as string, 
-        this.addMessage, 
-        () => {
-          alert("disconnected");
-          this.$router.push({ name: 'Contacts' });
-        }
-      );
+      peer.connectTo(userTo.connection, userTo.pubkey, this.addMessage, () => {
+        alert("disconnected");
+        this.$router.push({ name: "Contacts" });
+      });
     } catch (e) {
       this.$router.push({ name: "Contacts" });
     }
@@ -84,14 +93,14 @@ export default class Chat extends Vue {
       alert("Connection is closed");
     }
   }
-  
+
   logout() {
     User.logout();
     this.$router.push({ name: "Login" });
   }
 
   contacts() {
-    this.$router.push({ name: 'Contacts' });
+    this.$router.push({ name: "Contacts" });
     this.peer?.close();
   }
 }
