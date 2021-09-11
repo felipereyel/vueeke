@@ -25,7 +25,8 @@ import User, { UserAuth } from "../models/user";
 import peer, { MyPeer } from "../models/peer";
 
 interface Message {
-  content: String;
+  plainText: String;
+  cipherText: String;
   sender: String;
   sendedAt: String;
 }
@@ -54,7 +55,7 @@ export default class Chat extends Vue {
     this.userTo = userTo;
 
     if (peer.conn && peer.conn.peer === connection) {
-      peer.printMessage = this.addMessage;
+      peer.addMessage = this.addMessage;
       console.log("already connected");
     } else {
       try {
@@ -70,9 +71,10 @@ export default class Chat extends Vue {
     }
   }
 
-  addMessage(content: string, sender = "me") {
+  addMessage(plainText: string, cipherText: string, sender: string) {
     this.messages.push({
-      content,
+      plainText,
+      cipherText,
       sender,
       sendedAt: Date(),
     });
@@ -82,7 +84,6 @@ export default class Chat extends Vue {
     if (!this.contentToSend) return;
     try {
       peer.sendMessage(this.contentToSend);
-      this.addMessage(this.contentToSend);
       this.contentToSend = "";
     } catch (e) {
       alert(`Error: ${e.message}`);

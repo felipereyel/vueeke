@@ -1,21 +1,35 @@
 <template>
   <div class="message-list">
     <div v-for="msg in messages" :key="msg.sendedAt" class="message">
-      <img
-        class="message-icon"
-        :title="'Sender: ' + msg.sender"
-        src="../assets/prof1.png"
-        v-if="msg.sender !== 'me'"
-      />
-      <div :class="['content', messageClass(msg)]">
-        <pre>{{ msg.content }}</pre>
+      <div class="column" v-if="msg.sender !== 'me'">
+        <img
+          class="message-icon"
+          :title="'Sender: ' + msg.sender"
+          src="../assets/prof1.png"
+        />
+        <img
+          class="cipher-icon"
+          :title="msg.cipherText"
+          src="../assets/lock.jpg"
+        />
       </div>
-      <img
-        class="message-icon"
-        :title="'Sender: ' + msg.sender"
-        src="../assets/prof2.png"
-        v-if="msg.sender === 'me'"
-      />
+
+      <div :class="['plain', messageClass(msg)]">
+        <pre>{{ msg.plainText }}</pre>
+      </div>
+
+      <div class="column" v-if="msg.sender === 'me'">
+        <img
+          class="message-icon"
+          :title="'Sender: ' + msg.sender"
+          src="../assets/prof2.png"
+        />
+        <img
+          class="cipher-icon"
+          :title="msg.cipherText"
+          src="../assets/lock.jpg"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -24,7 +38,8 @@
 import { Options, Vue } from "vue-class-component";
 
 interface Message {
-  content: String;
+  plainText: String;
+  cipherText: String;
   sender: String;
   sendedAt: String;
 }
@@ -44,6 +59,11 @@ export default class MessageList extends Vue {
 </script>
 
 <style scoped>
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
 .message-list {
   overflow: auto;
 }
@@ -58,7 +78,12 @@ export default class MessageList extends Vue {
   width: 24px;
 }
 
-.message .content {
+.cipher-icon {
+  height: 17px;
+  width: 20px;
+}
+
+.message .plain {
   flex-grow: 1;
   height: 100%;
   margin: 10px;

@@ -5,7 +5,7 @@ import User from "./user";
 import { EKE, encrypt, decrypt, Pub, hashKey } from "../utils/crypto";
 
 type ConnectionHandler = (c: DataConnection) => void;
-type PrintMessage = (content: string, sender: string) => void;
+type AddMessage = (plainText: string, cipherText: string, sender: string) => void;
 
 export class MyPeer {
   static _instance: MyPeer | null = null;
@@ -25,7 +25,7 @@ export class MyPeer {
   eke: EKE | null = null;
   sessionSecret: Pub | null = null;
 
-  printMessage: PrintMessage | null = null;
+  addMessage: AddMessage | null = null;
 
   private constructor() {}
 
@@ -60,10 +60,10 @@ export class MyPeer {
     });
   }
 
-  connectTo(id: string, otherPubkey: Pub, printMessage: PrintMessage) {
+  connectTo(id: string, otherPubkey: Pub, addMessage: AddMessage) {
     if (!this.peer) throw new Error("cant connectTo without peer");
 
-    this.printMessage = printMessage;
+    this.addMessage = addMessage;
 
     if (this.conn) this.conn.close();
     const c = this.peer.connect(id, {
@@ -153,18 +153,20 @@ export class MyPeer {
   }
 
   receiveMessage(cipherText: string) {
-    if (!this.printMessage) throw new Error("cant receiveMessage without message handler");
+    if (!this.addMessage) throw new Error("cant receiveMessage without message handler");
     if (!this.sessionSecret) throw new Error("cant receiveMessage when secret is not stablished");
 
     const plainText = decrypt(cipherText, this.sessionSecret);
-    this.printMessage(plainText, "other");
+    this.addMessage(plainText, cipherText, "other");
   }
 
   sendMessage(plainText: string) {
     if (!this.conn || !this.conn.open) throw new Error("cant sendMessage when connection is closed");
+    if (!this.addMessage) throw new Error("cant sendMessage without message handler");
     if (!this.sessionSecret) throw new Error("cant sendMessage when secret is not stablished");
     
     const cipherText = encrypt(plainText, this.sessionSecret);
+    this.addMessage(plainText, cipherText, "me");
     this.conn.send({ type: "message", cipherText });
   }
 
