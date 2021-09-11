@@ -21,18 +21,17 @@ export class MyPeer {
   status: string = "Awaiting connection...";
   conn: DataConnection | null = null;
 
-  privkey: string;
+  privkey: string | null = null;
   eke: EKE | null = null;
   sessionSecret: Pub | null = null;
 
   addMessage: AddMessageHandler | null = null;
 
-  private constructor(privkey: string) {
-    this.privkey = privkey;
-  }
+  private constructor() {}
 
   init(onConnect: ConnectionHandler) {
     if (!User.current) throw new Error("user not found");
+    this.privkey = User.current.privkey;
 
     this.peer = new Peer(User.current.connection, {
       secure: Boolean(process.env.VUE_APP_PEER_SERVER_SECURE),
@@ -62,7 +61,9 @@ export class MyPeer {
   }
 
   connectTo(id: string, pubkey: Pub, addMessage: AddMessageHandler, onClose: CloserHandler) {
-    if (!this.peer) throw new Error("no peer found");
+    if (!this.peer) throw new Error("cant connect without peer");
+    if (!this.privkey) throw new Error("cant connect without privkey");
+
     this.eke = new EKE(this.privkey, pubkey);
     this.addMessage = addMessage;
 
@@ -117,8 +118,8 @@ export class MyPeer {
   }
 
   startKE(KE: Pub | null = null) {
-    if (!this.conn || !this.conn.open) throw new Error("Connection is closed");
-    if (!this.eke) throw new Error("eke not initialized");
+    if (!this.conn || !this.conn.open) throw new Error("cant start KE when connection is closed");
+    if (!this.eke) throw new Error("cant start KE when eke is not initialized");
     const toOther = this.eke.start();
 
     if (KE) {
@@ -129,21 +130,21 @@ export class MyPeer {
   }
 
   endKE(KE: Pub) {
-    if (!this.eke) throw new Error("eke not initialized");
+    if (!this.eke) throw new Error("cant end when eke is not initialized");
     this.sessionSecret = this.eke.end(KE);
   }
 
   receiveMessage(cipherText: string, ) {
-    if (!this.addMessage) throw new Error("No message handler");
-    if (!this.sessionSecret) throw new Error("secret not stablished");
+    if (!this.addMessage) throw new Error("cant receive message without message handler");
+    if (!this.sessionSecret) throw new Error("cant receive message when secret is not stablished");
 
     const plainText = decrypt(cipherText, this.sessionSecret);
     this.addMessage(plainText, "other");
   }
 
   sendMessage(plainText: string) {
-    if (!this.conn || !this.conn.open) throw new Error("Connection is closed");
-    if (!this.sessionSecret) throw new Error("secret not stablished");
+    if (!this.conn || !this.conn.open) throw new Error("cant send message when connection is closed");
+    if (!this.sessionSecret) throw new Error("cant send message when secret is not stablished");
     
     const cipherText = encrypt(plainText, this.sessionSecret);
     this.conn.send({ type: "message", cipherText });
