@@ -2,7 +2,15 @@
   <div class="chat" v-if="peer">
     <div class="header">
       <button @click="contacts">Contacts</button>
-      <h3>{{ peer.status }}</h3>
+      <h3
+        :title="
+          peer.sessionSecret
+            ? 'Session secret:\n' + hashKey(peer.sessionSecret)
+            : 'unset'
+        "
+      >
+        {{ peer.status }}
+      </h3>
       <button @click="logout">Logout</button>
     </div>
 
@@ -23,6 +31,7 @@ import MessageList from "../components/MessageList.vue";
 
 import User, { UserAuth } from "../models/user";
 import peer, { MyPeer } from "../models/peer";
+import { hashKey } from "../utils/crypto";
 
 interface Message {
   plainText: String;
@@ -37,6 +46,7 @@ interface Message {
   },
 })
 export default class Chat extends Vue {
+  hashKey = hashKey;
   messages: Message[] = [];
   contentToSend = "";
 
@@ -69,6 +79,8 @@ export default class Chat extends Vue {
         this.toContacts();
       }
     }
+
+    peer.status = "Connected to: " + userTo.username;
   }
 
   addMessage(plainText: string, cipherText: string, sender: string) {
@@ -108,8 +120,34 @@ export default class Chat extends Vue {
 </script>
 
 <style scoped>
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  height: 40px;
+}
+
+.chat {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.message-list {
+  max-height: calc(100vh - 110px);
+}
+
 .message-input {
   display: flex;
+  height: 35px;
+  margin-bottom: 8px;
 }
 
 .message-input textarea {
@@ -125,11 +163,5 @@ export default class Chat extends Vue {
   border-radius: 15px;
   background: #a2ddfa;
   border-color: #86b6cf;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
 }
 </style>

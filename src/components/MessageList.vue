@@ -1,6 +1,6 @@
 <template>
   <div class="message-list">
-    <div v-for="msg in messages" :key="msg.sendedAt" class="message">
+    <div v-for="msg in messages" :key="msg.sendedAt" class="row">
       <div class="column" v-if="msg.sender !== 'me'">
         <img
           class="message-icon"
@@ -9,7 +9,7 @@
         />
         <img
           class="cipher-icon"
-          :title="msg.cipherText"
+          :title="'Ciphertext:\n' + msg.cipherText"
           src="../assets/lock.jpg"
         />
       </div>
@@ -26,7 +26,7 @@
         />
         <img
           class="cipher-icon"
-          :title="msg.cipherText"
+          :title="'Ciphertext:\n' + msg.cipherText"
           src="../assets/lock.jpg"
         />
       </div>
@@ -64,16 +64,16 @@ export default class MessageList extends Vue {
   flex-direction: column;
 }
 
-.message-list {
-  overflow: auto;
-}
-
-.message {
+.row {
   display: flex;
   flex-direction: row;
 }
 
-.message .message-icon {
+.message-list {
+  overflow: auto;
+}
+
+.message-icon {
   height: 24px;
   width: 24px;
 }
@@ -83,20 +83,20 @@ export default class MessageList extends Vue {
   width: 20px;
 }
 
-.message .plain {
+.plain {
   flex-grow: 1;
   height: 100%;
   margin: 10px;
   border-radius: 8px;
 }
 
-.message .self-message {
+.self-message {
   background: #cceced;
   border-top-right-radius: 0;
   margin-left: 100px;
 }
 
-.message .other-message {
+.other-message {
   background: #cef0da;
   border-top-left-radius: 0;
   margin-right: 100px;
