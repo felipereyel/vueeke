@@ -7,9 +7,10 @@
     </div>
 
     <div class="id-input">
-      <input placeholder="ID of user" v-model="idToConnect" />
+      <input placeholder="Connection ID" v-model="idToConnect" />
       <button @click="connect">Connect</button>
       <button @click="copyId">Copy ID</button>
+      <button @click="refreshUsers">Refresh contacts</button>
     </div>
 
     <div class="contact-list">
@@ -56,6 +57,10 @@ export default class Contacts extends Vue {
         });
       });
     }
+    this.refreshUsers();
+  }
+
+  refreshUsers() {
     User.listUsers().then((r) => (this.users = r));
   }
 
