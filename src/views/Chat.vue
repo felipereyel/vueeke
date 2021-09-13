@@ -2,15 +2,18 @@
   <div class="chat" v-if="peer">
     <div class="header">
       <button @click="contacts">Contacts</button>
-      <h3
-        :title="
-          peer.sessionSecret
-            ? 'Session secret:\n' + hashKey(peer.sessionSecret)
-            : 'unset'
-        "
-      >
-        {{ peer.status }}
-      </h3>
+      <div>
+        <img
+          class="cipher-icon"
+          :title="
+            peer.sessionSecret
+              ? 'Session secret:\n' + hashKey(peer.sessionSecret)
+              : 'unset'
+          "
+          src="../assets/lock.jpg"
+        />
+        <h3>{{ peer.status }}</h3>
+      </div>
       <button @click="logout">Logout</button>
     </div>
 
@@ -127,6 +130,11 @@ export default class Chat extends Vue {
   height: 40px;
 }
 
+.header div {
+  display: flex;
+  align-items: center;
+}
+
 .chat {
   height: 100%;
   display: flex;
@@ -163,5 +171,10 @@ export default class Chat extends Vue {
   border-radius: 15px;
   background: #a2ddfa;
   border-color: #86b6cf;
+}
+
+.cipher-icon {
+  height: 24px;
+  width: 24px;
 }
 </style>
