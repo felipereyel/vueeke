@@ -106,18 +106,19 @@ export default class Chat extends Vue {
   }
 
   beforeUnmount() {
-    peer.close();
+    peer.conn?.close();
   }
 
   toLogout() {
+    peer.conn?.close();
+    peer.close();
     User.logout();
     this.$router.push({ name: "Login" });
-    peer.close();
   }
 
   toContacts() {
-    this.$router.push({ name: "Contacts" });
     peer.conn?.close();
+    this.$router.push({ name: "Contacts" });
   }
 }
 </script>

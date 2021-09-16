@@ -32,6 +32,7 @@ import { Options, Vue } from "vue-class-component";
 
 import User, { UserAuth } from "../models/user";
 import { hashKey } from "../utils/crypto";
+import peers from "../utils/peers";
 import peer from "../models/peer";
 import copy from "../utils/copy";
 
@@ -45,6 +46,7 @@ export default class Contacts extends Vue {
   user: User | null = null;
 
   users: UserAuth[] = [];
+  updateInterval: any;
 
   mounted() {
     if (!User.current) this.$router.push({ name: "Login" });
@@ -58,10 +60,20 @@ export default class Contacts extends Vue {
       });
     }
     this.refreshUsers();
+    this.updateInterval = setInterval(() => this.refreshUsers(), 3000);
   }
 
-  refreshUsers() {
-    User.listUsers().then((r) => (this.users = r));
+  beforeUnmount() {
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
+  }
+
+  async refreshUsers() {
+    const users = await User.listUsers();
+    const connectedPeers = await peers();
+    console.log({ connectedPeers, users });
+    this.users = users.filter((u) => connectedPeers.includes(u.connection));
   }
 
   get activeUsers(): UserAuth[] {
@@ -89,13 +101,13 @@ export default class Contacts extends Vue {
   }
 
   logout() {
+    peer.close();
     User.logout();
     this.$router.push({ name: "Login" });
   }
 
   contacts() {
-    this.$router.push({ name: "Contacts" });
-    peer.close();
+    // already here
   }
 }
 </script>
