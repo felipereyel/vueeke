@@ -2,7 +2,10 @@
   <div class="contacts">
     <div class="header">
       <button @click="contacts">Contacts</button>
-      <h3 v-if="user">{{ user.username }}: {{ user.connection }}</h3>
+      <div v-if="user">
+        <h3>User: {{ user.username }}</h3>
+        <span class="pubkey"><pre>Public Key: {{ hashKey(user.pubkey) }}</pre></span>
+      </div>
       <button @click="logout">Logout</button>
     </div>
 
@@ -17,9 +20,7 @@
       <div class="contact" v-for="u in activeUsers" :key="u.connection">
         <div class="info">
           <span>User: {{ u.username }}</span>
-          <span class="pubkey"
-            ><pre>Public Key: {{ hashKey(u.pubkey) }}</pre></span
-          >
+          <span class="pubkey"><pre>Public Key: {{ hashKey(u.pubkey) }}</pre></span>
         </div>
         <button @click="connectTo(u.connection)">Connect</button>
       </div>
@@ -60,7 +61,7 @@ export default class Contacts extends Vue {
       });
     }
     this.refreshUsers();
-    this.updateInterval = setInterval(() => this.refreshUsers(), 3000);
+    this.updateInterval = setInterval(() => this.refreshUsers(), 1000);
   }
 
   beforeUnmount() {
