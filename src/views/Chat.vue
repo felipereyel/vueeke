@@ -1,7 +1,7 @@
 <template>
   <div class="chat" v-if="peer">
     <div class="header">
-      <button @click="contacts">Contacts</button>
+      <button @click="toContacts">Contacts</button>
       <div>
         <img
           class="cipher-icon"
@@ -14,7 +14,7 @@
         />
         <h3>{{ peer.status }}</h3>
       </div>
-      <button @click="logout">Logout</button>
+      <button @click="toLogout">Logout</button>
     </div>
 
     <div v-if="peer.conn" class="chat-container">

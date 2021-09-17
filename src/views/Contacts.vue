@@ -1,12 +1,12 @@
 <template>
   <div class="contacts">
     <div class="header">
-      <button @click="contacts">Contacts</button>
+      <button @click="toContacts">Contacts</button>
       <div v-if="user">
         <h3>User: {{ user.username }}</h3>
         <span class="pubkey"><pre>Public Key: {{ hashKey(user.pubkey) }}</pre></span>
       </div>
-      <button @click="logout">Logout</button>
+      <button @click="toLogout">Logout</button>
     </div>
 
     <div class="id-input">
@@ -50,7 +50,7 @@ export default class Contacts extends Vue {
   updateInterval: any;
 
   mounted() {
-    if (!User.current) this.$router.push({ name: "Login" });
+    if (!User.current) this.toLogout();
     this.user = User.current;
     if (!peer.peer) {
       peer.init((c) => {
@@ -101,13 +101,13 @@ export default class Contacts extends Vue {
     }
   }
 
-  logout() {
+  toLogout() {
     peer.close();
     User.logout();
     this.$router.push({ name: "Login" });
   }
 
-  contacts() {
+  toContacts() {
     // already here
   }
 }
