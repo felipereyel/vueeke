@@ -5,12 +5,8 @@
       <div>
         <img
           class="cipher-icon"
-          :title="
-            peer.sessionSecret
-              ? 'Session secret:\n' + hashKey(peer.sessionSecret)
-              : 'unset'
-          "
           src="../assets/lock.jpg"
+          @click="showSecret"
         />
         <h3>{{ peer.status }}</h3>
       </div>
@@ -105,6 +101,10 @@ export default class Chat extends Vue {
     }
   }
 
+  showSecret() {
+    alert(peer.sessionSecret ? 'Session secret:\n' + hashKey(peer.sessionSecret) : 'unset');
+  }
+
   beforeUnmount() {
     peer.conn?.close();
   }
@@ -175,6 +175,7 @@ export default class Chat extends Vue {
 }
 
 .cipher-icon {
+  cursor: pointer; 
   height: 24px;
   width: 24px;
 }
