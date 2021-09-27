@@ -73,7 +73,6 @@ export default class Contacts extends Vue {
   async refreshUsers() {
     const users = await User.listUsers();
     const connectedPeers = await peers();
-    console.log({ connectedPeers, users });
     this.users = users.filter((u) => connectedPeers.includes(u.connection));
   }
 

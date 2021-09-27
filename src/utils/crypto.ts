@@ -78,11 +78,19 @@ export class EKE {
     }
 }
 
-export function encrypt(plainText: string, key: Pub): string {
-    return CryptoJS.AES.encrypt(plainText, hashKey(key)).toString();
+export function encrypt(plainText: string, key: string): string {
+    return CryptoJS.AES.encrypt(plainText, key).toString();
 }
 
-export function decrypt(cipherText: string, key: Pub): string {
-    const bytes = CryptoJS.AES.decrypt(cipherText, hashKey(key));
+export function decrypt(cipherText: string, key: string): string {
+    const bytes = CryptoJS.AES.decrypt(cipherText, key);
     return bytes.toString(CryptoJS.enc.Utf8);
+}
+
+export function encryptP(plainText: string, key: Pub): string {
+    return encrypt(plainText, hashKey(key));
+}
+
+export function decryptP(cipherText: string, key: Pub): string {
+    return decrypt(cipherText, hashKey(key));
 }

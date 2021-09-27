@@ -2,7 +2,7 @@ import Peer, { DataConnection } from "peerjs";
 
 import { goHome } from "@/router";
 import User from "./user";
-import { EKE, encrypt, decrypt, Pub, hashKey } from "../utils/crypto";
+import { EKE, encryptP, decryptP, Pub, hashKey } from "../utils/crypto";
 
 type ConnectionHandler = (c: DataConnection) => void;
 type AddMessage = (plainText: string, cipherText: string, sender: string) => void;
@@ -156,7 +156,7 @@ export class MyPeer {
     if (!this.addMessage) throw new Error("cant receiveMessage without message handler");
     if (!this.sessionSecret) throw new Error("cant receiveMessage when secret is not stablished");
 
-    const plainText = decrypt(cipherText, this.sessionSecret);
+    const plainText = decryptP(cipherText, this.sessionSecret);
     this.addMessage(plainText, cipherText, "other");
   }
 
@@ -165,7 +165,7 @@ export class MyPeer {
     if (!this.addMessage) throw new Error("cant sendMessage without message handler");
     if (!this.sessionSecret) throw new Error("cant sendMessage when secret is not stablished");
     
-    const cipherText = encrypt(plainText, this.sessionSecret);
+    const cipherText = encryptP(plainText, this.sessionSecret);
     this.addMessage(plainText, cipherText, "me");
     this.conn.send({ type: "message", cipherText });
   }

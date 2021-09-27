@@ -22,9 +22,9 @@ const routes = [
     component: () => import("../views/Chat.vue"),
   },
   {
-    path: "/about",
-    name: "About",
-    component: () => import("../views/About.vue"),
+    path: "/crypto",
+    name: "Crypto",
+    component: () => import("../views/Crypto.vue"),
   },
 ];
 
