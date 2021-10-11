@@ -9,8 +9,8 @@
         />
         <img
           class="cipher-icon"
-          :title="'Ciphertext:\n' + msg.cipherText"
           src="../assets/lock.jpg"
+          @click="showSecret(msg)"
         />
       </div>
 
@@ -26,8 +26,8 @@
         />
         <img
           class="cipher-icon"
-          :title="'Ciphertext:\n' + msg.cipherText"
           src="../assets/lock.jpg"
+          @click="showSecret(msg)"
         />
       </div>
     </div>
@@ -55,6 +55,10 @@ export default class MessageList extends Vue {
   messageClass(msg: Message) {
     return msg.sender === "me" ? "self-message" : "other-message";
   }
+
+  showSecret(msg: Message) {
+    alert('Ciphertext:\n' + msg.cipherText);
+  }
 }
 </script>
 
@@ -79,6 +83,7 @@ export default class MessageList extends Vue {
 }
 
 .cipher-icon {
+  cursor: pointer; 
   height: 17px;
   width: 20px;
 }

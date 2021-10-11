@@ -1,20 +1,16 @@
 <template>
   <div class="chat" v-if="peer">
     <div class="header">
-      <button @click="contacts">Contacts</button>
+      <button @click="toContacts">Contacts</button>
       <div>
         <img
           class="cipher-icon"
-          :title="
-            peer.sessionSecret
-              ? 'Session secret:\n' + hashKey(peer.sessionSecret)
-              : 'unset'
-          "
           src="../assets/lock.jpg"
+          @click="showSecret"
         />
         <h3>{{ peer.status }}</h3>
       </div>
-      <button @click="logout">Logout</button>
+      <button @click="toLogout">Logout</button>
     </div>
 
     <div v-if="peer.conn" class="chat-container">
@@ -105,6 +101,10 @@ export default class Chat extends Vue {
     }
   }
 
+  showSecret() {
+    alert(peer.sessionSecret ? 'Session secret:\n' + hashKey(peer.sessionSecret) : 'unset');
+  }
+
   beforeUnmount() {
     peer.conn?.close();
   }
@@ -175,6 +175,7 @@ export default class Chat extends Vue {
 }
 
 .cipher-icon {
+  cursor: pointer; 
   height: 24px;
   width: 24px;
 }

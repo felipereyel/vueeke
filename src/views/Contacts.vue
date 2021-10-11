@@ -1,9 +1,12 @@
 <template>
   <div class="contacts">
     <div class="header">
-      <button @click="contacts">Contacts</button>
-      <h3 v-if="user">{{ user.username }}: {{ user.connection }}</h3>
-      <button @click="logout">Logout</button>
+      <button @click="toContacts">Contacts</button>
+      <div v-if="user">
+        <h3>User: {{ user.username }}</h3>
+        <span class="pubkey"><pre>Public Key: {{ hashKey(user.pubkey) }}</pre></span>
+      </div>
+      <button @click="toLogout">Logout</button>
     </div>
 
     <div class="id-input">
@@ -17,9 +20,7 @@
       <div class="contact" v-for="u in activeUsers" :key="u.connection">
         <div class="info">
           <span>User: {{ u.username }}</span>
-          <span class="pubkey"
-            ><pre>Public Key: {{ hashKey(u.pubkey) }}</pre></span
-          >
+          <span class="pubkey"><pre>Public Key: {{ hashKey(u.pubkey) }}</pre></span>
         </div>
         <button @click="connectTo(u.connection)">Connect</button>
       </div>
@@ -49,7 +50,7 @@ export default class Contacts extends Vue {
   updateInterval: any;
 
   mounted() {
-    if (!User.current) this.$router.push({ name: "Login" });
+    if (!User.current) this.toLogout();
     this.user = User.current;
     if (!peer.peer) {
       peer.init((c) => {
@@ -60,7 +61,7 @@ export default class Contacts extends Vue {
       });
     }
     this.refreshUsers();
-    this.updateInterval = setInterval(() => this.refreshUsers(), 3000);
+    this.updateInterval = setInterval(() => this.refreshUsers(), 1000);
   }
 
   beforeUnmount() {
@@ -72,7 +73,6 @@ export default class Contacts extends Vue {
   async refreshUsers() {
     const users = await User.listUsers();
     const connectedPeers = await peers();
-    console.log({ connectedPeers, users });
     this.users = users.filter((u) => connectedPeers.includes(u.connection));
   }
 
@@ -100,13 +100,13 @@ export default class Contacts extends Vue {
     }
   }
 
-  logout() {
+  toLogout() {
     peer.close();
     User.logout();
     this.$router.push({ name: "Login" });
   }
 
-  contacts() {
+  toContacts() {
     // already here
   }
 }
