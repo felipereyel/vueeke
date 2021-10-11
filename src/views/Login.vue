@@ -4,7 +4,9 @@
     <div class="login-input">
       <input placeholder="Username" v-model="username" />
       <input placeholder="Private Key" type="password" v-model="privKey" />
-      <button @click="login">Login</button>
+      <button :disabled="loading" @click="login">
+        Login {{ loading ? " ⌛" : "" }}
+      </button>
       <button @click="register">Register</button>
     </div>
   </div>
@@ -18,6 +20,7 @@ import User from "../models/user";
 export default class Login extends Vue {
   username = "";
   privKey = "";
+  loading = false;
 
   mounted() {
     if (User.current) {
@@ -27,10 +30,13 @@ export default class Login extends Vue {
 
   async login() {
     try {
+      this.loading = true;
       await User.login(this.username, this.privKey);
       this.$router.push({ name: "Contacts" });
     } catch (e) {
       alert(e.message);
+    } finally {
+      this.loading = false;
     }
   }
 

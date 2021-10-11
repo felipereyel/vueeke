@@ -3,7 +3,9 @@
     <h2>Register</h2>
     <div class="register-input" v-if="!privKey">
       <input placeholder="Username" v-model="username" />
-      <button @click="register">Register</button>
+      <button :disabled="loading" @click="register">
+        Register {{ loading ? " ⌛" : "" }}
+      </button>
       <button @click="login">Login</button>
     </div>
     <div class="register-result" v-else>
@@ -24,6 +26,7 @@ import User from "../models/user";
 export default class Login extends Vue {
   username = "";
   privKey = "";
+  loading = false;
 
   mounted() {
     if (User.current) {
@@ -38,9 +41,12 @@ export default class Login extends Vue {
     }
 
     try {
+      this.loading = true;
       this.privKey = await User.register(this.username);
     } catch (e) {
       alert(e.message);
+    } finally {
+      this.loading = false;
     }
   }
 
