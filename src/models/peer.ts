@@ -3,6 +3,7 @@ import Peer, { DataConnection } from "peerjs";
 import { goHome } from "@/router";
 import User from "./user";
 import { EKE, encryptP, decryptP, Pub, hashKey } from "../utils/crypto";
+import Debugger from "../utils/debugger";
 
 type ConnectionHandler = (c: DataConnection) => void;
 type AddMessage = (plainText: string, cipherText: string, sender: string) => void;
@@ -62,20 +63,18 @@ export class MyPeer {
 
   connectTo(id: string, otherPubkey: Pub, addMessage: AddMessage) {
     if (!this.peer) throw new Error("cant connectTo without peer");
-
+    
+    if (this.conn) this.conn.close();
     this.addMessage = addMessage;
 
-    if (this.conn) this.conn.close();
-    const c = this.peer.connect(id, {
-      reliable: true,
-    });
-
+    const c = this.peer.connect(id, { reliable: true });
+    this.handleConnection(c);
+    
     c.on("open", () => {
       // setTimeout
       this.startKE(otherPubkey);
     });
 
-    this.handleConnection(c);
   }
 
   handleConnection(c: DataConnection) {
@@ -91,6 +90,7 @@ export class MyPeer {
 
     this.conn = c;
     this.status = "Connected to: " + c.peer;
+    Debugger.print({ step: "init WebRTC", peer: c.peer });
 
     c.on("data", (data) => {
       if (typeof data === "object") {
@@ -122,50 +122,47 @@ export class MyPeer {
     
     this.eke = new EKE(this.privkey, otherPubkey);
     const hanshake = this.eke.start();
+    Debugger.print({ step: "KE > sending handshake", handshake: hashKey(hanshake) });
     this.conn.send({ type: "start_KE", hanshake });
-    //
-    console.log(`my handshake: ${hashKey(hanshake)}`);
   }
-
+  
   async startAndEndKE(hanshake: Pub, connection: string) {
     if (!this.conn || !this.conn.open) throw new Error("cant startAndEndKE when connection is closed");
     if (!this.privkey) throw new Error("cant startAndEndKE without privkey");
-
+    
     const userTo = await User.findByConnection(connection);
     if (!userTo) throw new Error("cant startAndEndKE when userTo is unknown");
     
     this.eke = new EKE(this.privkey, userTo.pubkey);
     const myHanshake = this.eke.start();
+    Debugger.print({ step: "KE > sending handshake", handshake: hashKey(hanshake) });
     this.conn.send({ type: "end_KE", hanshake: myHanshake });
-    //
-    console.log(`my handshake: ${hashKey(myHanshake)}`);
-    //
     this.endKE(hanshake);
   }
 
   endKE(hanshake: Pub) {
-    console.log(`other handshake: ${hashKey(hanshake)}`)
-    //
+    Debugger.print({ step: "KE > received handshake", handshake: hashKey(hanshake) });
     if (!this.eke) throw new Error("cant endKE when eke is not initialized");
     this.sessionSecret = this.eke.end(hanshake);
-    //
-    console.log(`session secret: ${hashKey(this.sessionSecret)}`);
+    Debugger.print({ step: "KE > secret shared", secret: hashKey(this.sessionSecret) });
   }
 
-  receiveMessage(cipherText: string) {
+  receiveMessage(cipherText: string) {    
     if (!this.addMessage) throw new Error("cant receiveMessage without message handler");
     if (!this.sessionSecret) throw new Error("cant receiveMessage when secret is not stablished");
 
     const plainText = decryptP(cipherText, this.sessionSecret);
+    Debugger.print({ step: "message received", cipherText, plainText });
     this.addMessage(plainText, cipherText, "other");
   }
-
+  
   sendMessage(plainText: string) {
     if (!this.conn || !this.conn.open) throw new Error("cant sendMessage when connection is closed");
     if (!this.addMessage) throw new Error("cant sendMessage without message handler");
     if (!this.sessionSecret) throw new Error("cant sendMessage when secret is not stablished");
     
     const cipherText = encryptP(plainText, this.sessionSecret);
+    Debugger.print({ step: "message sent", cipherText, plainText });
     this.addMessage(plainText, cipherText, "me");
     this.conn.send({ type: "message", cipherText });
   }

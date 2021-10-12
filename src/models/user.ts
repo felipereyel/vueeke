@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 import { createKey, genSignature, Pub } from "../utils/crypto";
+import Debugger from "../utils/debugger";
 
 export type UserAuth = {
   username: string;
@@ -55,12 +56,14 @@ export default class User {
 
   static async register(username: string): Promise<string> {
     const { privkey, pubkey } = createKey();
+    Debugger.print({ step: "regiger", username, privkey, pubkey });
     await fetcher("users", "PUT", { username, pubkey });
     return privkey;
   }
 
   static async login(username: string, privkey: string): Promise<User> {
     const { message, signature } = genSignature(privkey);
+    Debugger.print({ step: "login", username, message, signature });
     const { token } = await fetcher("users/login", "POST", { username, message, signature });
     setStored(token, privkey);
     return User.fromToken(token, privkey);
