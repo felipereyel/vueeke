@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-import { createKey, genSignature, Pub } from "../utils/crypto";
+import { createKey, genSignature, Pub, hashKey } from "../utils/crypto";
 import Debugger from "../utils/debugger";
 
 export type UserAuth = {
@@ -56,7 +56,7 @@ export default class User {
 
   static async register(username: string): Promise<string> {
     const { privkey, pubkey } = createKey();
-    Debugger.print({ step: "regiger", username, privkey, pubkey });
+    Debugger.print({ step: "regiger", username, pubkey: hashKey(pubkey) });
     await fetcher("users", "PUT", { username, pubkey });
     return privkey;
   }

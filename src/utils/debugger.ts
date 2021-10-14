@@ -1,5 +1,5 @@
 export default class Debugger {
-  static state = false;
+  static state = true;
 
   static toggle() {
     Debugger.state = !Debugger.state;
